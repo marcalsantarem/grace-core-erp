@@ -1,4 +1,9 @@
+<img width="1057" height="240" alt="grace-core" src="https://github.com/user-attachments/assets/89466509-b644-47f8-8608-d6b3734c44de" />
+
+
 # Grace Core ERP
+
+
 
 > Sistema integrado de gestão empresarial desenvolvido para estudo, aperfeiçoamento técnico e implementação de regras de negócio reais utilizando COBOL.
 
