@@ -17,10 +17,10 @@
        01 WS-OPCAO             PIC X(1)  VALUE SPACES.
        01 WS-CONTINUAR         PIC X(1)  VALUE 'S'.
       *>---------------------------------------------------------------*
-       SCREEN SECTION.          *
+       SCREEN SECTION.
       *>---------------------------------------------------------------*
        01 TELA-LIMPA
-          BLANK SCREEN.                              *
+          BLANK SCREEN.
       *>---------------------------------------------------------------*
        01 TELA-BASE.           
           COPY                    TELAHEAD.CPY.
@@ -35,7 +35,7 @@
              "                                                  ".             
       *>---------------------------------------------------------------*
        01 TELA-CAMPOS.
-          05 LINE  7 COL 34
+          05 LINE  7 COL 31
              PIC X(1)     USING WS-OPCAO
              FOREGROUND-COLOR 14 HIGHLIGHT.
       *>---------------------------------------------------------------*
