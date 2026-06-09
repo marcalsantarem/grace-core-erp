@@ -13,33 +13,45 @@
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
            COPY                   ARQSELEC.CPY
-                              REPLACING ==XARQ-== BY ==GRP==
-                                      ==XARQNOM== BY =="DADOSGRP.DAD"==
-                                      ==XARQKEY== BY ==GRP-CODIGO==.
+                           REPLACING ==XARQARQ== BY ==ARQ-GRP==
+                                        ==XNOM== BY =="DADOSGRP.DAD"==
+                                        ==XKEY== BY ==GRP-CODIGO==
+                                      ==XFSARQ== BY ==FS-GRP==.
       *>---------------------------------------------------------------*
        DATA DIVISION.
        FILE SECTION.
       *>-> Registro do arquivo de grupos de produtos
            COPY                   ARQREGFD.CPY
-                                 REPLACING ==XARQ-== BY ==GRP==
-                                           ==XREG-== BY ==REG-GRUPO==.
+                                REPLACING ==XARQARQ== BY ==ARQ-GRP==
+                                             ==XREG== BY ==REG-GRUPO==.
           05 GRP-CODIGO           PIC 9(04).
           05 GRP-DESCRICAO        PIC X(40).
           05 GRP-ATIVO            PIC X(01).
       *>---------------------------------------------------------------*
        WORKING-STORAGE SECTION.
+       01 WS-WORKING.
       *>-> Variáveis para manipulação de opções do menu e controle de loop 
-       01 WS-OPCAO                PIC X  VALUE SPACES.
+          05 WS-OPCAO             PIC X  VALUE SPACES.
       *>-> Variáveis para manipulação de grupos de produtos 
-       01 WS-GRPPRD.
-          05 WS-GRPPRD-COD        PIC 9(04) VALUE ZEROS.
-          05 WS-GRPPRD-DES        PIC X(30) VALUE SPACES.
-          05 WS-GRPPRD-SIT        PIC X(01) VALUE SPACES.
-             88 GRPPRD-SITATI               VALUE 'S'.
-             88 GRPPRD-SITINA               VALUE 'N'.
+          05 WS-GRPPRD.
+             10 WS-GRPPRD-COD     PIC 9(04) VALUE ZEROS.
+             10 WS-GRPPRD-DES     PIC X(30) VALUE SPACES.
+             10 WS-GRPPRD-SIT     PIC X(01) VALUE SPACES.
+                88 GRPPRD-SITATI            VALUE 'S'.
+                88 GRPPRD-SITINA            VALUE 'N'.       
+      *>-> Variável para controle de validade dos dados
+          05 WS-VALIDO            PIC 9(1).
+             88 VALIDO-SIM                 VALUE 1.
+             88 VALIDO-NAO                 VALUE 0.
+          05 WS-ERROR-MSG         PIC X(50) VALUE SPACES.
       *>-> File status do arquivo de grupos de produtos
            COPY                   ARQFILES.CPY
-                                 REPLACING ==XARQ-== BY ==GRP==.
+                           REPLACING ==XFSARQ== BY ==FS-GRP==
+                                     ==XFSOK==  BY ==FS-GRP-OK==
+                                     ==XFSDUP== BY ==FS-GRP-DUPLICADO==
+                                      ==XFSNF== BY ==FS-GRP-NOT-FOUND==
+                                      ==XFSNE== BY ==FS-GRP-NOT-EXIST==
+                                     ==XFSEOF== BY ==FS-GRP-EOF==.
       *>---------------------------------------------------------------*
        SCREEN SECTION.
       *>---------------------------------------------------------------*
@@ -79,17 +91,121 @@
       *>---------------------------------------------------------------*
        PROCEDURE DIVISION.
       *>---------------------------------------------------------------*
+      *>-> Rotinas de arquivos de dados 
+           COPY                   ARQROTIN.CPY
+                           REPLACING ==XOPEN== BY ==OPEN-GRP==
+                                    ==XCLOSE== BY ==CLOSE-GRP==
+                                     ==XREAD== BY ==READ-GRP==
+                                  ==XREWRITE== BY ==RE-WRITE-GRP==
+                                   ==XDELETE== BY ==DELETE-GRP==
+                                   ==XARQARQ== BY ==ARQ-GRP==
+                                      ==XREG== BY ==REG-GRUPO==
+                                     ==XFSOK== BY ==FS-GRP-OK==
+                                    ==XFSDUP== BY ==FS-GRP-DUPLICADO==
+                                     ==XFSNE== BY ==FS-GRP-NOT-EXIST==
+                                      ==XKEY== BY ==GRP-CODIGO==.
+      *>---------------------------------------------------------------*
        INICIO.
-           PERFORM                DESENHAR-TELA.
+           PERFORM                OPEN-GRP.
+           PERFORM                GRP-MANUTENCAO.
+           PERFORM                CLOSE-GRP.
            EXIT PROGRAM.
       *>---------------------------------------------------------------*
-       DESENHAR-TELA.
-           DISPLAY                TELA-LIMPA     
+      *>-> Manutenção de grupos de produtos     
+       GRP-MANUTENCAO.
+      *>-> Limpa a tela e exibe o menu de opções     
+           DISPLAY                TELA-LIMPA
            DISPLAY                TELA-BASE
+           PERFORM                GRP-LOOP-OPCOES UNTIL WS-OPCAO = "E"
+                                                     OR WS-OPCAO = "e".
+      *>---------------------------------------------------------------*       
+      *>-> Aceita a opção do usuário e direciona para a rotina correspondente                                               
+       GRP-LOOP-OPCOES.
+           MOVE SPACES            TO WS-OPCAO.
+           INITIALIZE             WS-GRPPRD.
            ACCEPT                 TELA-OPCAO.
-      *>---------------------------------------------------------------*
-           COPY                   ARQROTIN.CPY
-                                 REPLACING ==XARQ-== BY ==GRP==
-                                           ==XREG-== BY ==REG-GRUPO==
-                                         ==XARQKEY== BY ==GRP-CODIGO==.
+           EVALUATE TRUE
+               WHEN WS-OPCAO = "N" OR WS-OPCAO = "n"
+                   PERFORM GRP-NOVO
+               WHEN WS-OPCAO = "B" OR WS-OPCAO = "b"
+                   PERFORM GRP-CONSULTAR
+               WHEN WS-OPCAO = "G" OR WS-OPCAO = "g"
+                   CONTINUE
+               WHEN WS-OPCAO = "X" OR WS-OPCAO = "x"
+                   CONTINUE
+               WHEN WS-OPCAO = "E" OR WS-OPCAO = "e"
+                   CONTINUE
+               WHEN OTHER
+                   DISPLAY "Opcao invalida." AT LINE 20 COL 2
+                   CALL "SYSTEM" USING "PAUSE"
+           END-EVALUATE.
+      *>---------------------------------------------------------------* 
+      *>-> Rotina para criação de um novo grupo de produto     
+       GRP-NOVO.
+           SET GRPPRD-SITATI TO TRUE
+           ACCEPT                 TELA-DADOS.
+           PERFORM                GRP-VALIDA-DADOS.
+           IF NOT VALIDO-SIM
+              DISPLAY WS-ERROR-MSG AT LINE 20 COL 2
+              CALL "SYSTEM" USING "PAUSE"
+              EXIT                PARAGRAPH           
+           END-IF
+           PERFORM                RE-WRITE-GRP
+           IF FS-GRP-OK
+              DISPLAY "Grupo de produto gravado com sucesso." 
+                                  AT LINE 20 COL 2
+           ELSE
+              DISPLAY "Erro ao gravar grupo de produto." 
+                                  AT LINE 20 COL 2
+           END-IF.
+      *>---------------------------------------------------------------* 
+      *>-> Rotina para consulta de grupos de produtos     
+       GRP-CONSULTAR.
+      *>-> Aceita o código do grupo de produtos
+           ACCEPT                 TELA-CODIGO.
+      *>-> Se informou código para consultar     
+           IF WS-GRPPRD-COD IS NOT EQUAL TO ZEROS
+      *>-> Lê o grupo de produtos        
+              MOVE WS-GRPPRD-COD  TO GRP-CODIGO
+              PERFORM             READ-GRP
+      *>-> Se leu ok        
+              IF FS-GRP-OK
+                 MOVE REG-GRUPO   TO WS-GRPPRD
+              ELSE
+                 MOVE "Grupo de produto nao encontrado." TO WS-ERROR-MSG
+              END-IF
+           END-IF.
+      *>---------------------------------------------------------------* 
+      *>-> Rotina para validação dos dados do grupo de produto     
+       GRP-VALIDA-DADOS.
+      *>-> Presume que não é válido     
+           SET VALIDO-NAO TO TRUE.
+      *>-> Se não informou código ou código é zero
+           IF WS-GRPPRD-COD IS EQUAL TO ZEROS
+              MOVE "Codigo do grupo de produto nao pode ser zero." 
+                                  TO WS-ERROR-MSG,
+              EXIT                PARAGRAPH,
+           END-IF
+      *>-> Se não informou descrição
+           IF WS-GRPPRD-DES IS EQUAL TO SPACES
+               MOVE "Descricao do grupo de produto nao pode ser vazia." 
+                                   TO WS-ERROR-MSG,
+               EXIT                PARAGRAPH,
+           END-IF
+      *>-> Se situação não é 'S' ou 'N'
+           IF NOT (GRPPRD-SITATI OR GRPPRD-SITINA)
+               MOVE "Situacao do grupo de produto deve ser 'S' ou 'N'." 
+                                   TO WS-ERROR-MSG,
+               EXIT                PARAGRAPH,
+           END-IF
+      *>-> Verifica se código do grupo de produto já existe
+           MOVE WS-GRPPRD-COD  TO GRP-CODIGO,
+           PERFORM             READ-GRP,           
+           IF FS-GRP-OK
+               MOVE "Codigo do grupo de produto ja existe." 
+                                   TO WS-ERROR-MSG,
+               EXIT                PARAGRAPH,
+           END-IF
+      *>-> Indica que o registro é válido
+           SET VALIDO-SIM TO TRUE.
       *>---------------------------------------------------------------*

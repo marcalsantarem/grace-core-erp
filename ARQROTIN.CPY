@@ -2,33 +2,33 @@
       *> Copy padrão de rotinas para arquivos de dados                 *
       *>---------------------------------------------------------------*
       *>-> Abre arquivo. Se nao existir, cria um novo arquivo vazio
-       OPEN-XARQ-ARQ.
-           OPEN I-O               XARQ-ARQ
-           IF XARQ-NOT-EXIST
-               OPEN OUTPUT        XARQ-ARQ
-               CLOSE              XARQ-ARQ
-               OPEN I-O           XARQ-ARQ
+       XOPEN.
+           OPEN I-O               XARQARQ
+           IF XFSNE
+               OPEN OUTPUT        XARQARQ
+               CLOSE              XARQARQ
+               OPEN I-O           XARQARQ
            END-IF.
       *>---------------------------------------------------------------*
       *>-> Fecha arquivo
-       CLOSE-XARQ-ARQ.
-           CLOSE                  XARQ-ARQ.
+       XCLOSE.
+           CLOSE                  XARQARQ.
       *>---------------------------------------------------------------*
       *>-> Le registro na chave principal
-       READ-XARQ-ARQ.
-           READ XARQ-ARQ KEY IS XARQKEY.
+       XREAD.
+           READ XARQARQ KEY IS XKEY.
       *>---------------------------------------------------------------*
       *>-> Grava ou regrava registro
-       RE-WRITE-XARQ-ARQ.
-           WRITE                  XREG-ARQ.
-           IF XARQ-OK
+       XREWRITE.
+           WRITE                  XREG.
+           IF XFSOK
                EXIT PARAGRAPH
-           ELSE IF XARQ-DUPLICADO
-               REWRITE            XREG-ARQ
+           ELSE IF XFSDUP
+               REWRITE            XREG
            END-IF.
       *>---------------------------------------------------------------*
       *>-> Exclui registro
-       DELETE-XARQ-ARQ.
-           DELETE                 XARQ-ARQ.
+       XDELETE.
+           DELETE                 XARQARQ.
       *>---------------------------------------------------------------*
            

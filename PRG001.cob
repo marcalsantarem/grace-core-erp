@@ -29,7 +29,7 @@
           05 LINE  7 COL  2 VALUE "Selecione uma opcao do menu:".
           05 LINE  8 COL  1 VALUE
              "                                                  ".
-          05 LINE  9 COL  3 VALUE "1 - Modulo 1".
+          05 LINE  9 COL  3 VALUE "1 - Grupos de Produtos".
           05 LINE 10 COL  3 VALUE "0 - Sair".
           05 LINE 11 COL  1 VALUE
              "                                                  ".             

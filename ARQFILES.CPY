@@ -9,11 +9,11 @@
       *> 35 = Arquivo nao existe                                       *
       *> 10 = Fim de arquivo (EOF)                                     *
       *>---------------------------------------------------------------*
-       01 XARQ-FS                 PIC X(02) VALUE "00".
-          88 XARQ-OK                        VALUE "00".
-          88 XARQ-DUPLICADO                 VALUE "22".
-          88 XARQ-NOT-FOUND                 VALUE "23".
-          88 XARQ-NOT-EXIST                 VALUE "35".
-          88 XARQ-EOF                       VALUE "10".
+       01 XFSARQ                  PIC X(02) VALUE "00".
+          88 XFSOK                          VALUE "00".
+          88 XFSDUP                         VALUE "22".
+          88 XFSNF                          VALUE "23".
+          88 XFSNE                          VALUE "35".
+          88 XFSEOF                         VALUE "10".
       *>---------------------------------------------------------------*
           
